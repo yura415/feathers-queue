@@ -1,0 +1,25 @@
+{
+  "name": "feathers-queue",
+  "version": "0.0.2",
+  "description": "",
+  "main": "src/",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yura415/feathers-queue.git"
+  },
+  "author": "Georgiy Chirkov <yura415@gmail.com>",
+  "license": "MIT",
+  "homepage": "https://github.com/yura415/feathers-queue",
+  "devDependencies": {
+    "feathers": "^2.2.3"
+  },
+  "dependencies": {
+    "bull": "^3.3.6",
+    "feathers-query-filters": "^2.1.2",
+    "feathers-rethinkdb": "^0.4.3",
+    "rethinkdbdash": "^2.3.31"
+  }
+}
