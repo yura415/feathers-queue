@@ -10,27 +10,27 @@ type QueueConfig = {
   name: string
   concurrency: number
   workerClass?: Worker
-  processFn: (job) => Promise
-  options: {
-    prefix: string
-    stallInterval: number
-    nearTermWindow: number
-    delayedDebounce: number
-    redis: {
-      host: string
-      port: number
-      db: number
-      options: {}
+  processFn?: (job) => Promise
+  options?: {
+    prefix?: string
+    stallInterval?: number
+    nearTermWindow?: number
+    delayedDebounce?: number
+    redis?: {
+      host?: string
+      port?: number
+      db?: number
+      options?: {}
     }
-    isWorker: boolean
-    getEvents: boolean
-    sendEvents: boolean
-    storeJobs: boolean
-    ensureScripts: boolean
-    activateDelayedJobs: boolean
-    removeOnSuccess: boolean
-    removeOnFailure: boolean
-    redisScanCount: number
+    isWorker?: boolean
+    getEvents?: boolean
+    sendEvents?: boolean
+    storeJobs?: boolean
+    ensureScripts?: boolean
+    activateDelayedJobs?: boolean
+    removeOnSuccess?: boolean
+    removeOnFailure?: boolean
+    redisScanCount?: number
   }
 }
 
