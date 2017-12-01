@@ -1,0 +1,44 @@
+{
+  "plugins": [
+    "node",
+    "promise"
+  ],
+  "extends": [
+    "eslint:recommended",
+    "plugin:node/recommended",
+    "plugin:promise/recommended"
+  ],
+  "env": {
+    "es6": true,
+    "node": true,
+    "mocha": true
+  },
+  "rules": {
+    "promise/always-return": "warn",
+    "node/no-unsupported-features": ["error", {
+      "version": 8,
+      "ignores": []
+    }],
+    "node/no-unpublished-require": ["error", {
+      "allowModules": ["request-promise"]
+    }],
+    "indent": [
+      "error",
+      2
+    ],
+    "linebreak-style": [
+      "error",
+      "unix"
+    ],
+    "quotes": [
+      "error",
+      "single",
+      "avoid-escape"
+    ],
+    "semi": [
+      "error",
+      "never"
+    ]
+  },
+  "parserOptions": {"ecmaVersion": 2017}
+}
