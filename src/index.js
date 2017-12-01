@@ -21,6 +21,10 @@ class QueueService {
     this.app = app
   }
 
+  /**
+   * @param params
+   * @returns {*}
+   */
   find (params) {
     const paginate = (params && typeof params.paginate !== 'undefined') ? params.paginate : this.paginate
     const result = this._find(params, query => filter(query, paginate))
@@ -32,6 +36,54 @@ class QueueService {
     return result
   }
 
+  /**
+   * @param {Payload} payload
+   * @param {feathers.Params & {queue: string, job?:JobOptions}} params
+   * @returns {Promise.<Job>}
+   */
+  create (payload, params) {
+    const queue = this.queue[params.queue]
+    assert.ok(queue)
+    const job = queue.createJob(payload)
+    const jobOptions = Object.assign({}, params.job)
+    if (!isNaN(jobOptions.retries)) {
+      job.retries(jobOptions.retries)
+    }
+    if (jobOptions.backoff) {
+      assert.ok(jobOptions.backoff.strategy)
+      assert.ok(jobOptions.backoff.delayFactor)
+      job.backoff(jobOptions.backoff.strategy, jobOptions.backoff.delayFactor)
+    }
+    if (!isNaN(+jobOptions.delayUntil)) {
+      job.delayUntil(jobOptions.delayUntil)
+    }
+    if (!isNaN(jobOptions.timeout)) {
+      job.timeout(jobOptions.timeout)
+    }
+    return job.save()
+  }
+
+  /**
+   * @param {QueueConfig} config
+   */
+  setupQueue (config) {
+    const queue = this.queue[config.name] = new Queue(config.name, config.options)
+    if (config.workerClass) {
+      queue.process(config.concurrency, (job) => {
+        return new config.workerClass(this.app, job).process()
+      })
+    } else {
+      assert.ok(config.processFn)
+      queue.process(config.concurrency, config.processFn)
+    }
+  }
+
+  /**
+   * @param params
+   * @param getFilter
+   * @returns {Promise.<*>}
+   * @private
+   */
   async _find (params, getFilter = filter) {
     let { filters } = getFilter(params.query || {})
 
@@ -67,50 +119,6 @@ class QueueService {
       limit: filters.$limit,
       skip: filters.$skip || 0,
       data,
-    }
-  }
-
-
-  /**
-   * @param {Payload} payload
-   * @param {feathers.Params & {queue: string, job?:JobOptions}} params
-   * @returns {Promise.<Job>}
-   */
-  create (payload, params) {
-    const queue = this.queue[params.queue]
-    assert.ok(queue)
-    const job = queue.createJob(payload)
-    const jobOptions = Object.assign({}, params.job)
-    if (!isNaN(jobOptions.retries)) {
-      job.retries(jobOptions.retries)
-    }
-    if (jobOptions.backoff) {
-      assert.ok(jobOptions.backoff.strategy)
-      assert.ok(jobOptions.backoff.delayFactor)
-      job.backoff(jobOptions.backoff.strategy, jobOptions.backoff.delayFactor)
-    }
-    if (!isNaN(+jobOptions.delayUntil)) {
-      job.delayUntil(jobOptions.delayUntil)
-    }
-    if (!isNaN(jobOptions.timeout)) {
-      job.timeout(jobOptions.timeout)
-    }
-    return job.save()
-  }
-
-  /**
-   * @param {QueueConfig} config
-   * @private
-   */
-  setupQueue (config) {
-    const queue = this.queue[config.name] = new Queue(config.name, config.options)
-    if (config.workerClass) {
-      queue.process(config.concurrency, (job) => {
-        return new config.workerClass(this.app, job).process()
-      })
-    } else {
-      assert.ok(config.processFn)
-      queue.process(config.concurrency, config.processFn)
     }
   }
 }
