@@ -4,9 +4,6 @@ const assert = require('assert')
 const Queue = require('bee-queue')
 const filter = require('feathers-query-filters')
 
-const QueueLocalEvents = ['ready', 'error', 'succeeded', 'retrying', 'failed', 'stalled']
-const QueuePubSubEvents = ['job succeeded', 'job retrying', 'job failed', 'job progress']
-const JobEvents = ['succeeded', 'retrying', 'failed', 'progress']
 const JobTypes = ['active', 'waiting', 'completed', 'failed', 'delayed']
 const CustomEvents = ['queued', 'completed', 'failed']
 
@@ -109,8 +106,13 @@ class QueueService {
       throw new Error('invalid type. valid options are: ' + JobTypes.map(v => '"' + v + '"').join(', '))
     }
 
-    const queue = this.queue[params.queue]
-    assert.ok(queue, 'queue ' + params.queue + ' doesn\'t exist')
+    let queue
+    if (!params.queue && this._queues.length === 1) {
+      queue = this.queue[this._queues[0]]
+    } else if (params.queue) {
+      queue = this.queue[params.queue]
+    }
+    assert.ok(queue, 'no queue ' + params.queue)
     const counts = await queue.checkHealth()
     const total = counts[params.type]
 
