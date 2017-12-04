@@ -8,11 +8,12 @@ const QueueLocalEvents = ['ready', 'error', 'succeeded', 'retrying', 'failed', '
 const QueuePubSubEvents = ['job succeeded', 'job retrying', 'job failed', 'job progress']
 const JobEvents = ['succeeded', 'retrying', 'failed', 'progress']
 const JobTypes = ['active', 'waiting', 'completed', 'failed', 'delayed']
+const CustomEvents = ['queued', 'completed', 'failed']
 
 class QueueService {
   constructor (options) {
     this.options = Object.assign({}, options)
-    this.events = options.events || [].concat(QueueLocalEvents).concat(JobEvents)
+    this.events = options.events || [...CustomEvents]
     this.paginate = options.paginate || {}
     this.queue = {}
   }
@@ -61,6 +62,10 @@ class QueueService {
       job.timeout(jobOptions.timeout)
     }
     return job.save()
+      .then(job => {
+        this.emit('queued', params.queue, job)
+        return job
+      })
   }
 
   /**
@@ -76,6 +81,8 @@ class QueueService {
       assert.ok(config.processFn)
       queue.process(config.concurrency, config.processFn)
     }
+    queue.on('job succeeded', (job, result) => this.emit('completed', job.id, result))
+    queue.on('job failed', (job, err) => this.emit('failed', job.id, err))
   }
 
   /**
