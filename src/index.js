@@ -49,7 +49,7 @@ class QueueService {
     }
     assert.ok(queue, 'no queue ' + params.queue)
     const job = queue.createJob(payload)
-    const jobOptions = Object.assign({}, params.job)
+    const jobOptions = Object.assign({}, this.options.job, params.job)
     if (!isNaN(jobOptions.retries)) {
       job.retries(jobOptions.retries)
     }
@@ -71,7 +71,7 @@ class QueueService {
    * @param {QueueConfig} config
    */
   setupQueue (config) {
-    const queue = this.queue[config.name] = new Queue(config.name, config.options)
+    const queue = this.queue[config.name] = new Queue(config.name, Object.assign({}, this.options.queue, config.options))
     if (config.workerClass) {
       queue.process(config.concurrency, (job) => {
         return new config.workerClass(this.app, job).process()
