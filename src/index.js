@@ -65,10 +65,6 @@ class QueueService {
       job.timeout(jobOptions.timeout)
     }
     return job.save()
-      .then(job => {
-        this.emit('queued', params.queue, job)
-        return job
-      })
   }
 
   /**
