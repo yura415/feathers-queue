@@ -16,6 +16,7 @@ class QueueService {
     this.events = options.events || [...CustomEvents]
     this.paginate = options.paginate || {}
     this.queue = {}
+    this._queues = []
   }
 
   async setup (app) {
@@ -43,8 +44,13 @@ class QueueService {
    * @returns {Promise.<Job>}
    */
   create (payload, params) {
-    const queue = this.queue[params.queue]
-    assert.ok(queue)
+    let queue
+    if (!params.queue && this._queues.length === 1) {
+      queue = this.queue[this._queues[0]]
+    } else if (params.queue) {
+      queue = this.queue[params.queue]
+    }
+    assert.ok(queue, 'no queue ' + params.queue)
     const job = queue.createJob(payload)
     const jobOptions = Object.assign({}, params.job)
     if (!isNaN(jobOptions.retries)) {
@@ -83,6 +89,7 @@ class QueueService {
     }
     queue.on('job succeeded', (job, result) => this.emit('completed', job.id, result))
     queue.on('job failed', (job, err) => this.emit('failed', job.id, err))
+    this._queues.push(config.name)
   }
 
   /**
