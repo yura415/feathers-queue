@@ -5,7 +5,7 @@ const Queue = require('bee-queue')
 const filter = require('feathers-query-filters')
 
 const JobTypes = ['active', 'waiting', 'completed', 'failed', 'delayed']
-const CustomEvents = ['completed', 'failed']
+const CustomEvents = ['completed', 'failed', 'progress']
 
 class QueueService {
   constructor (options) {
@@ -96,6 +96,7 @@ class QueueService {
     }
     queue.on('job succeeded', (jobId, result) => this.emit('completed', jobId, result))
     queue.on('job failed', (jobId, err) => this.emit('failed', jobId, err))
+    queue.on('job progress', (jobId, progress) => this.emit('progress', jobId, progress))
     this._queues.push(config.name)
   }
 
