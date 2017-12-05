@@ -157,5 +157,6 @@ function serialize (job) {
     id: job.id,
     data: job.data,
     progress: job.progress,
+    status: job.status,
   }
 }
