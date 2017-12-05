@@ -5,7 +5,7 @@ const Queue = require('bee-queue')
 const filter = require('feathers-query-filters')
 
 const JobTypes = ['active', 'waiting', 'completed', 'failed', 'delayed']
-const CustomEvents = ['queued', 'completed', 'failed']
+const CustomEvents = ['completed', 'failed']
 
 class QueueService {
   constructor (options) {
@@ -65,6 +65,7 @@ class QueueService {
       job.timeout(jobOptions.timeout)
     }
     return job.save()
+      .then(job => params.provider ? serialize(job) : job)
   }
 
   /**
@@ -130,10 +131,18 @@ class QueueService {
       total,
       limit: filters.$limit,
       skip: filters.$skip || 0,
-      data,
+      data: params.provider ? data.map(serialize) : data,
     }
   }
 }
 
 module.exports = options => new QueueService(options)
 module.exports.Service = QueueService
+
+function serialize (job) {
+  return {
+    id: job.id,
+    data: job.data,
+    progress: job.progress,
+  }
+}
