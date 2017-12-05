@@ -35,6 +35,19 @@ class QueueService {
     return result
   }
 
+  get (id, params) {
+    let queue
+    if (!params.queue && this._queues.length === 1) {
+      queue = this.queue[this._queues[0]]
+    } else if (params.queue) {
+      queue = this.queue[params.queue]
+    }
+    assert.ok(queue, 'no queue ' + params.queue)
+
+    return queue.getJob(id)
+      .then(job => params.provider ? serialize(job) : job)
+  }
+
   /**
    * @param {Payload} payload
    * @param {feathers.Params & {queue: string, job?:JobOptions}} params
