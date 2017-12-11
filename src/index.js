@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 'use strict'
 
 const assert = require('assert')
@@ -36,16 +37,15 @@ class QueueService {
   }
 
   get (id, params) {
-    let queue
-    if (!params.queue && this._queues.length === 1) {
-      queue = this.queue[this._queues[0]]
-    } else if (params.queue) {
-      queue = this.queue[params.queue]
-    }
-    assert.ok(queue, 'no queue ' + params.queue)
-
+    const queue = this._queue(params)
     return queue.getJob(id)
       .then(job => params.provider ? serialize(job) : job)
+  }
+
+  remove (id, params) {
+    const queue = this._queue(params)
+    return queue.getJob(id)
+      .then(job => job.remove())
   }
 
   /**
@@ -54,13 +54,7 @@ class QueueService {
    * @returns {Promise.<Job>}
    */
   create (payload, params) {
-    let queue
-    if (!params.queue && this._queues.length === 1) {
-      queue = this.queue[this._queues[0]]
-    } else if (params.queue) {
-      queue = this.queue[params.queue]
-    }
-    assert.ok(queue, 'no queue ' + params.queue)
+    const queue = this._queue(params)
     const job = queue.createJob(payload)
     const jobOptions = Object.assign({}, this.options.job, params.job)
     if (!isNaN(jobOptions.retries)) {
@@ -85,7 +79,7 @@ class QueueService {
    * @param {QueueConfig} config
    */
   setupQueue (config) {
-    const queue = this.queue[config.name] = new Queue(config.name, Object.assign({}, this.options.queue, config.options))
+    const queue = new Queue(config.name, Object.assign({}, this.options.queue, config.options))
     if (config.workerClass) {
       queue.process(config.concurrency, (job) => {
         return new config.workerClass(this.app, job).process()
@@ -97,6 +91,7 @@ class QueueService {
     queue.on('job succeeded', (jobId, result) => this.emit('completed', jobId, result))
     queue.on('job failed', (jobId, err) => this.emit('failed', jobId, err))
     queue.on('job progress', (jobId, progress) => this.emit('progress', jobId, progress))
+    this.queue[config.name] = queue
     this._queues.push(config.name)
   }
 
@@ -117,13 +112,7 @@ class QueueService {
       throw new Error('invalid type. valid options are: ' + JobTypes.map(v => '"' + v + '"').join(', '))
     }
 
-    let queue
-    if (!params.queue && this._queues.length === 1) {
-      queue = this.queue[this._queues[0]]
-    } else if (params.queue) {
-      queue = this.queue[params.queue]
-    }
-    assert.ok(queue, 'no queue ' + params.queue)
+    const queue = this._queue(params)
     const counts = await queue.checkHealth()
     const total = counts[params.type]
 
@@ -148,13 +137,24 @@ class QueueService {
       data: params.provider ? data.map(serialize) : data,
     }
   }
+
+  _queue (params) {
+    let queue
+    if (!params.queue && this._queues.length === 1) {
+      queue = this.queue[this._queues[0]]
+    } else if (params.queue) {
+      queue = this.queue[params.queue]
+    }
+    assert.ok(queue, 'no such queue ' + params.queue)
+    return queue
+  }
 }
 
 module.exports = options => new QueueService(options)
 module.exports.Service = QueueService
 
 function serialize (job) {
-  return {
+  return job && {
     id: job.id,
     data: job.data,
     progress: job.progress,
