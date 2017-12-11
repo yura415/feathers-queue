@@ -4,7 +4,7 @@ const assert = require('assert')
 const Queue = require('bee-queue')
 const filter = require('feathers-query-filters')
 
-const JobTypes = ['active', 'waiting', 'completed', 'failed', 'delayed']
+const JobTypes = ['active', 'waiting', 'delayed', 'succeeded', 'failed']
 const CustomEvents = ['completed', 'failed', 'progress']
 
 class QueueService {
