@@ -44,8 +44,10 @@ class QueueService {
 
   remove (id, params) {
     const queue = this._queue(params)
-    return queue.getJob(id)
-      .then(job => job.remove())
+    if (Array.isArray(id)) {
+      return Promise.all(id.map(id => this._remove(id, queue)))
+    }
+    return this._remove(id, queue)
   }
 
   /**
@@ -136,6 +138,11 @@ class QueueService {
       skip: filters.$skip || 0,
       data: params.provider ? data.map(serialize) : data,
     }
+  }
+
+  _remove (id, queue) {
+    return queue.getJob(id)
+      .then(job => job.remove())
   }
 
   _queue (params) {
