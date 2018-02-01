@@ -1,29 +1,29 @@
 /* eslint-disable no-console */
-const feathers = require('feathers')
-const rest = require('feathers-rest')
-const socketio = require('feathers-socketio')
-const handler = require('feathers-errors/handler')
-const bodyParser = require('body-parser')
+const feathers = require('@feathersjs/feathers')
+const express = require('@feathersjs/express')
+const socketio = require('@feathersjs/socketio')
+const handler = require('@feathersjs/errors/handler')
 const service = require('../src')
 
 // Create a feathers instance.
-const app = feathers()
-// Enable Socket.io
+const app = express(feathers())
+  // Enable Socket.io
   .configure(socketio())
-  // Enable REST services
-  .configure(rest())
   // Turn on JSON parser for REST services
-  .use(bodyParser.json())
+  .use(express.json())
   // Turn on URL-encoded parser for REST services
-  .use(bodyParser.urlencoded({ extended: true }))
+  .use(express.urlencoded({ extended: true }))
 
-app.use('/example-task', service({
-  name: 'example-task',
-  paginate: {
-    default: 10,
-    max: 50,
-  },
-}))
+app.use(
+  '/example-task',
+  service({
+    name: 'example-task',
+    paginate: {
+      default: 10,
+      max: 50,
+    },
+  })
+)
 
 app.use(handler())
 
@@ -37,11 +37,16 @@ app.service('example-task').setupQueue({
   },
 })
 
-app.service('example-task').create({
-  test: 123,
-}, {
-  queue: 'example-task-test',
-})
+app
+  .service('example-task')
+  .create(
+    {
+      test: 123,
+    },
+    {
+      queue: 'example-task-test',
+    }
+  )
   .then(job => {
     job.on('succeeded', result => console.log('job succeeded', result))
     job.on('retrying', err => console.error('job retrying', err))
@@ -51,6 +56,6 @@ app.service('example-task').create({
 
 // Start the server
 const server = app.listen(3030)
-server.on('listening', function () {
+server.on('listening', function() {
   console.log('Feathers Tasks service running on 127.0.0.1:3030')
 })

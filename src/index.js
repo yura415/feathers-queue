@@ -3,13 +3,13 @@
 
 const assert = require('assert')
 const Queue = require('bee-queue')
-const filter = require('feathers-query-filters')
+const { filterQuery } = require('@feathersjs/commons')
 
 const JobTypes = ['active', 'waiting', 'delayed', 'succeeded', 'failed']
 const CustomEvents = ['completed', 'failed', 'progress']
 
 class QueueService {
-  constructor (options) {
+  constructor(options) {
     this.options = Object.assign({}, options)
     this.events = options.events || [...CustomEvents]
     this.paginate = options.paginate || {}
@@ -17,7 +17,7 @@ class QueueService {
     this._queues = []
   }
 
-  async setup (app) {
+  async setup(app) {
     this.app = app
   }
 
@@ -25,9 +25,12 @@ class QueueService {
    * @param params
    * @returns {*}
    */
-  find (params) {
-    const paginate = (params && typeof params.paginate !== 'undefined') ? params.paginate : this.paginate
-    const result = this._find(params, query => filter(query, paginate))
+  find(params) {
+    const paginate =
+      params && typeof params.paginate !== 'undefined'
+        ? params.paginate
+        : this.paginate
+    const result = this._find(params, query => filterQuery(query, paginate))
 
     if (!paginate.default) {
       return result.then(page => page.data)
@@ -36,13 +39,14 @@ class QueueService {
     return result
   }
 
-  get (id, params) {
+  get(id, params) {
     const queue = this._queue(params)
-    return queue.getJob(id)
-      .then(job => params.provider ? serialize(job) : job)
+    return queue
+      .getJob(id)
+      .then(job => (params.provider ? serialize(job) : job))
   }
 
-  remove (id, params) {
+  remove(id, params) {
     const queue = this._queue(params)
     if (Array.isArray(id)) {
       return Promise.all(id.map(id => this._remove(id, queue)))
@@ -55,7 +59,7 @@ class QueueService {
    * @param {feathers.Params & {queue: string, job?:JobOptions}} params
    * @returns {Promise.<Job>}
    */
-  create (payload, params) {
+  create(payload, params) {
     const queue = this._queue(params)
     const job = queue.createJob(payload)
     const jobOptions = Object.assign({}, this.options.job, params.job)
@@ -73,26 +77,32 @@ class QueueService {
     if (!isNaN(jobOptions.timeout)) {
       job.timeout(jobOptions.timeout)
     }
-    return job.save()
-      .then(job => params.provider ? serialize(job) : job)
+    return job.save().then(job => (params.provider ? serialize(job) : job))
   }
 
   /**
    * @param {QueueConfig} config
    */
-  setupQueue (config) {
-    const queue = new Queue(config.name, Object.assign({}, this.options.queue, config.options))
+  setupQueue(config) {
+    const queue = new Queue(
+      config.name,
+      Object.assign({}, this.options.queue, config.options)
+    )
     if (config.workerClass) {
-      queue.process(config.concurrency, (job) => {
+      queue.process(config.concurrency, job => {
         return new config.workerClass(this.app, job).process()
       })
-    } else {
+    } else if (config.processFn) {
       assert.ok(config.processFn)
       queue.process(config.concurrency, config.processFn)
     }
-    queue.on('job succeeded', (jobId, result) => this.emit('completed', jobId, result))
+    queue.on('job succeeded', (jobId, result) =>
+      this.emit('completed', jobId, result)
+    )
     queue.on('job failed', (jobId, err) => this.emit('failed', jobId, err))
-    queue.on('job progress', (jobId, progress) => this.emit('progress', jobId, progress))
+    queue.on('job progress', (jobId, progress) =>
+      this.emit('progress', jobId, progress)
+    )
     this.queue[config.name] = queue
     this._queues.push(config.name)
   }
@@ -103,7 +113,7 @@ class QueueService {
    * @returns {Promise.<*>}
    * @private
    */
-  async _find (params, getFilter = filter) {
+  async _find(params, getFilter = filterQuery) {
     let { filters } = getFilter(params.query || {})
 
     if (!params.type) {
@@ -111,7 +121,10 @@ class QueueService {
     }
 
     if (!~JobTypes.indexOf(params.type)) {
-      throw new Error('invalid type. valid options are: ' + JobTypes.map(v => '"' + v + '"').join(', '))
+      throw new Error(
+        'invalid type. valid options are: ' +
+          JobTypes.map(v => '"' + v + '"').join(', ')
+      )
     }
 
     const queue = this._queue(params)
@@ -128,9 +141,12 @@ class QueueService {
     }
 
     const skip = filters.$skip || 0
-    const limit = filters.$limit || (total - skip)
+    const limit = filters.$limit || total - skip
 
-    const data = await queue.getJobs(params.type, { start: skip, end: skip + limit })
+    const data = await queue.getJobs(params.type, {
+      start: skip,
+      end: skip + limit,
+    })
 
     return {
       total,
@@ -140,12 +156,11 @@ class QueueService {
     }
   }
 
-  _remove (id, queue) {
-    return queue.getJob(id)
-      .then(job => job.remove())
+  _remove(id, queue) {
+    return queue.getJob(id).then(job => job.remove())
   }
 
-  _queue (params) {
+  _queue(params) {
     let queue
     if (!params.queue && this._queues.length === 1) {
       queue = this.queue[this._queues[0]]
@@ -160,11 +175,13 @@ class QueueService {
 module.exports = options => new QueueService(options)
 module.exports.Service = QueueService
 
-function serialize (job) {
-  return job && {
-    id: job.id,
-    data: job.data,
-    progress: job.progress,
-    status: job.status,
-  }
+function serialize(job) {
+  return (
+    job && {
+      id: job.id,
+      data: job.data,
+      progress: job.progress,
+      status: job.status,
+    }
+  )
 }

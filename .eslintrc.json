@@ -1,12 +1,10 @@
 {
   "plugins": [
-    "node",
-    "promise"
+    "node"
   ],
   "extends": [
     "eslint:recommended",
-    "plugin:node/recommended",
-    "plugin:promise/recommended"
+    "plugin:node/recommended"
   ],
   "env": {
     "es6": true,
@@ -14,7 +12,6 @@
     "mocha": true
   },
   "rules": {
-    "promise/always-return": "warn",
     "node/no-unsupported-features": ["error", {
       "version": 8,
       "ignores": []

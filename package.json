@@ -9,17 +9,15 @@
   "author": "Georgiy Chirkov <yura415@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "bee-queue": "^1.1.0",
-    "feathers-query-filters": "^2.1.2"
+    "@feathersjs/commons": "^1.4.0",
+    "@feathersjs/errors": "^3.2.2",
+    "@feathersjs/express": "^1.1.2",
+    "@feathersjs/feathers": "^3.1.0",
+    "@feathersjs/socketio": "^3.1.0",
+    "bee-queue": "^1.1.0"
   },
   "devDependencies": {
-    "body-parser": "^1.18.2",
     "eslint": "^4.12.1",
-    "eslint-plugin-node": "^5.2.1",
-    "eslint-plugin-promise": "^3.6.0",
-    "feathers": "^2.2.3",
-    "feathers-errors": "^2.9.2",
-    "feathers-rest": "^1.8.1",
-    "feathers-socketio": "^2.0.1"
+    "eslint-plugin-node": "^5.2.1"
   }
 }
