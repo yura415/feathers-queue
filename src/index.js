@@ -96,6 +96,12 @@ class QueueService {
       assert.ok(config.processFn)
       queue.process(config.concurrency, config.processFn)
     }
+    queue.on('error', err => {
+      this.emit('error', config.name, err)
+    })
+    queue.on('ready', () => {
+      this.emit('ready', config.name)
+    })
     queue.on('job succeeded', (jobId, result) =>
       this.emit('completed', jobId, result)
     )
