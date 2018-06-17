@@ -1,41 +1,47 @@
 {
-  "plugins": [
-    "node"
-  ],
-  "extends": [
-    "eslint:recommended",
-    "plugin:node/recommended"
-  ],
   "env": {
     "es6": true,
     "node": true,
     "mocha": true
   },
+  "parserOptions": {
+    "ecmaVersion": 2017
+  },
+  "plugins": ["node"],
+  "extends": ["eslint:recommended", "plugin:node/recommended"],
   "rules": {
-    "node/no-unsupported-features": ["error", {
-      "version": 8,
-      "ignores": []
-    }],
-    "node/no-unpublished-require": ["error", {
-      "allowModules": ["request-promise"]
-    }],
     "indent": [
       "error",
-      2
+      2,
+      {
+        "SwitchCase": 1
+      }
     ],
-    "linebreak-style": [
+    "linebreak-style": ["error", "unix"],
+    "quotes": ["error", "single", "avoid-escape"],
+    "semi": ["error", "never"],
+    "comma-dangle": [
       "error",
-      "unix"
+      {
+        "arrays": "always-multiline",
+        "objects": "always-multiline",
+        "functions": "always-multiline"
+      }
     ],
-    "quotes": [
+    "space-before-function-paren": [
       "error",
-      "single",
-      "avoid-escape"
+      {
+        "anonymous": "never",
+        "named": "never",
+        "asyncArrow": "always"
+      }
     ],
-    "semi": [
+    "array-bracket-spacing": [
       "error",
-      "never"
+      "always",
+      {
+        "objectsInArrays": false
+      }
     ]
-  },
-  "parserOptions": {"ecmaVersion": 2017}
+  }
 }

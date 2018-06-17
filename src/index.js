@@ -5,13 +5,13 @@ const assert = require('assert')
 const Queue = require('bee-queue')
 const { filterQuery } = require('@feathersjs/commons')
 
-const JobTypes = ['active', 'waiting', 'delayed', 'succeeded', 'failed']
-const CustomEvents = ['completed', 'failed', 'progress']
+const JobTypes = [ 'active', 'waiting', 'delayed', 'succeeded', 'failed' ]
+const CustomEvents = [ 'completed', 'failed', 'progress' ]
 
 class QueueService {
   constructor(options) {
     this.options = Object.assign({}, options)
-    this.events = options.events || [...CustomEvents]
+    this.events = options.events || [ ...CustomEvents ]
     this.paginate = options.paginate || {}
     this.queue = {}
     this._queues = []
@@ -41,9 +41,7 @@ class QueueService {
 
   get(id, params) {
     const queue = this._queue(params)
-    return queue
-      .getJob(id)
-      .then(job => (params.provider ? serialize(job) : job))
+    return queue.getJob(id).then(job => serialize(job))
   }
 
   remove(id, params) {
@@ -77,7 +75,10 @@ class QueueService {
     if (!isNaN(jobOptions.timeout)) {
       job.timeout(jobOptions.timeout)
     }
-    return job.save().then(job => (params.provider ? serialize(job) : job))
+    if (params.jobId) {
+      job.setId(params.jobId)
+    }
+    return job.save().then(job => serialize(job))
   }
 
   /**
@@ -86,7 +87,7 @@ class QueueService {
   setupQueue(config) {
     const queue = new Queue(
       config.name,
-      Object.assign({}, this.options.queue, config.options)
+      Object.assign({}, this.options.queue, config.options),
     )
     if (config.workerClass) {
       queue.process(config.concurrency, job => {
@@ -103,11 +104,11 @@ class QueueService {
       this.emit('ready', config.name)
     })
     queue.on('job succeeded', (jobId, result) =>
-      this.emit('completed', jobId, result)
+      this.emit('completed', jobId, result),
     )
     queue.on('job failed', (jobId, err) => this.emit('failed', jobId, err))
     queue.on('job progress', (jobId, progress) =>
-      this.emit('progress', jobId, progress)
+      this.emit('progress', jobId, progress),
     )
     this.queue[config.name] = queue
     this._queues.push(config.name)
@@ -129,7 +130,7 @@ class QueueService {
     if (!~JobTypes.indexOf(params.type)) {
       throw new Error(
         'invalid type. valid options are: ' +
-          JobTypes.map(v => '"' + v + '"').join(', ')
+          JobTypes.map(v => '"' + v + '"').join(', '),
       )
     }
 
