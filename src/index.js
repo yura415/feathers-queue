@@ -78,7 +78,7 @@ class QueueService {
     if (params.jobId) {
       job.setId(params.jobId)
     }
-    return job.save().then(job => serialize(job))
+    return job.save().then(job => (params.raw ? job : serialize(job)))
   }
 
   /**
@@ -159,7 +159,7 @@ class QueueService {
       total,
       limit: filters.$limit,
       skip: filters.$skip || 0,
-      data: params.provider ? data.map(serialize) : data,
+      data: params.provider && !params.raw ? data.map(serialize) : data,
     }
   }
 
