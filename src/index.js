@@ -79,6 +79,9 @@ class QueueService {
 		if (params.jobId) {
 			job.setId(params.jobId)
 		}
+		if (params.save === false) {
+			return job
+		}
 		return job.save().then(job => (params.raw ? job : serialize(job)))
 	}
 
