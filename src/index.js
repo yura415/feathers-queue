@@ -102,22 +102,26 @@ class QueueService {
 			queue.process(config.concurrency, config.processFn)
 		}
 		queue.on('error', err => {
-			this.emit('error', { queue: config.name, err: serializeError(err) })
+			this.emit('error', { queue: queue.name, err: serializeError(err) })
 		})
 		queue.on('ready', () => {
-			this.emit('ready', { queue: config.name })
+			this.emit('ready', { queue: queue.name })
 		})
 		queue.on('job succeeded', (jobId, result) =>
-			this.emit('completed', { jobId, result }),
+			this.emit('completed', { queue: queue.name, jobId, result }),
 		)
 		queue.on('job failed', (jobId, err) =>
-			this.emit('failed', { jobId, err: serializeError(err) }),
+			this.emit('failed', {
+				queue: queue.name,
+				jobId,
+				err: serializeError(err),
+			}),
 		)
 		queue.on('job progress', (jobId, progress) =>
-			this.emit('progress', { jobId, progress }),
+			this.emit('progress', { queue: queue.name, jobId, progress }),
 		)
-		this.queue[config.name] = queue
-		this._queues.push(config.name)
+		this.queue[queue.name] = queue
+		this._queues.push(queue.name)
 	}
 
 	/**
