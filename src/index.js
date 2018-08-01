@@ -7,7 +7,7 @@ const { filterQuery } = require('@feathersjs/commons')
 const serializeError = require('serialize-error')
 
 const JobTypes = [ 'active', 'waiting', 'delayed', 'succeeded', 'failed' ]
-const CustomEvents = [ 'completed', 'failed', 'progress' ]
+const CustomEvents = [ 'completed', 'failed', 'progress', 'queue error' ]
 
 class QueueService {
 	constructor(options) {
@@ -102,7 +102,7 @@ class QueueService {
 			queue.process(config.concurrency, config.processFn)
 		}
 		queue.on('error', err => {
-			this.emit('error', { queue: queue.name, err: serializeError(err) })
+			this.emit('queue error', { queue: queue.name, err: serializeError(err) })
 		})
 		queue.on('ready', () => {
 			this.emit('ready', { queue: queue.name })
